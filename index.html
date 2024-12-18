@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body class="bg-light">
+    <main id="app">
+        <!-- Navbar -->
+        <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+            <div class="container">
+                <a class="navbar-brand" href="#">{{user.username}}</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav">
+                        <li class="nav-item">
+                            <a class="nav-link active" href="#">Profile</a>
+                        </li>
+                    </ul>
+                    <ul class="navbar-nav ms-auto">
+                        <li class="nav-item">
+                            <button class="nav-link" @click="logout">Logout</button>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Content -->
+        <div class="container py-4">
+            <div class="row justify-content-center">
+                <div class="col-md-8">
+                    <div class="card shadow">
+                        <div class="card-body">
+                            <h3 class="card-title mb-4">Profile Information</h3>
+                            <div v-if="loading" class="text-center">
+                                <div class="spinner-border" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                            </div>
+                            <form v-else>
+                                <div class="mb-3">
+                                    <label class="form-label">Username</label>
+                                    <input type="text" class="form-control" v-model="user.username" readonly>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Email</label>
+                                    <input type="email" class="form-control" v-model="user.email" readonly>
+                                </div>
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label">First Name</label>
+                                        <input type="text" class="form-control" v-model="user.fname" readonly>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Last Name</label>
+                                        <input type="text" class="form-control" v-model="user.lname" readonly>
+                                    </div>
+                                </div>
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label">Province</label>
+                                        <input type="text" class="form-control" v-model="user.province" readonly>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">District</label>
+                                        <input type="text" class="form-control" v-model="user.district" readonly>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Sub District</label>
+                                    <input type="text" class="form-control" v-model="user.sub_district" readonly>
+                                </div>
+                                <div class="text-end">
+                                    <button type="button" class="btn btn-primary" @click="setEdit">Edit Profile</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Edit Modal -->
+        <div class="modal fade" id="editModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Edit Profile</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div v-if="form_loading" class="text-center">
+                            <div class="spinner-border" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                        </div>
+                        <form v-else @submit.prevent="submitUpdate">
+                            <div class="mb-3">
+                                <label class="form-label">Email</label>
+                                <input type="email" class="form-control" v-model="user.email">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">First Name</label>
+                                <input type="text" class="form-control" v-model="user.fname">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Last Name</label>
+                                <input type="text" class="form-control" v-model="user.lname">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Province</label>
+                                <select class="form-select" v-model="user.province" @change="onProvinceChanged">
+                                    <option value="">Select province</option>
+                                    <option v-for="(item, index) in provinces" :key="index">{{item}}</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">District</label>
+                                <select class="form-select" v-model="user.district" @change="onDistrictChanged">
+                                    <option value="">Select district</option>
+                                    <option v-for="(item, index) in districts" :key="index">{{item}}</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Sub District</label>
+                                <select class="form-select" v-model="user.sub_district">
+                                    <option value="">Select sub district</option>
+                                    <option v-for="(item, index) in sub_districts" :key="index">{{item}}</option>
+                                </select>
+                            </div>
+                            <div class="text-end">
+                                <button type="submit" class="btn btn-primary">Save Changes</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const { createApp } = Vue;
+        createApp({
+            data() {
+                return {
+                    loading: true,
+                    form_loading: false,
+                    token: null,
+                    user: {},
+                    base_url: "https://express-test-api-l0zc.onrender.com",
+                    provinces: [],
+                    districts: [],
+                    sub_districts: [],
+                    editModal: null
+                };
+            },
+            async mounted() {
+                // Check authentication
+                this.token = localStorage.getItem('token');
+                if (!this.token) {
+                    location.replace("./login.html");
+                    return;
+                }
+
+                // Initialize Bootstrap modal
+                this.editModal = new bootstrap.Modal(document.getElementById('editModal'));
+
+                // Load initial data
+                await this.loadProvinces();
+                
+                // Set authorization header
+                axios.defaults.headers.common["Authorization"] = `Bearer ${this.token}`;
+                
+                // Load user profile
+                try {
+                    const response = await axios.get(`${this.base_url}/profile`);
+                    this.user = response.data;
+                } catch (error) {
+                    console.error('Error loading profile:', error);
+                    Swal.fire({
+                        title: "Error!",
+                        text: "Failed to load profile",
+                        icon: "error"
+                    });
+                }
+                
+                this.loading = false;
+            },
+            methods: {
+                logout() {
+                    localStorage.removeItem('token');
+                    location.replace("./login.html");
+                },
+                async setEdit() {
+                    this.form_loading = true;
+                    this.editModal.show();
+
+                    if (this.user.province) {
+                        await this.loadDistrict(this.user.province);
+                        await this.loadSubDistrict(this.user.province, this.user.district);
+                    } else {
+                        this.user.province = "";
+                        this.user.district = "";
+                        this.user.sub_district = "";
+                    }
+
+                    this.form_loading = false;
+                },
+                async loadProvinces() {
+                    try {
+                        const response = await axios.get(`${this.base_url}/provinces`);
+                        this.provinces = response.data;
+                    } catch (error) {
+                        console.error('Error loading provinces:', error);
+                    }
+                },
+                async loadDistrict(province) {
+                    try {
+                        const response = await axios.get(`${this.base_url}/provinces/${province}`);
+                        this.districts = response.data;
+                    } catch (error) {
+                        console.error('Error loading districts:', error);
+                    }
+                },
+                async loadSubDistrict(province, district) {
+                    try {
+                        const response = await axios.get(`${this.base_url}/provinces/${province}/${district}`);
+                        this.sub_districts = response.data;
+                    } catch (error) {
+                        console.error('Error loading sub-districts:', error);
+                    }
+                },
+                async onProvinceChanged(e) {
+                    this.user.district = "";
+                    this.user.sub_district = "";
+                    await this.loadDistrict(e.target.value);
+                },
+                async onDistrictChanged(e) {
+                    this.user.sub_district = "";
+                    await this.loadSubDistrict(this.user.province, e.target.value);
+                },
+                async submitUpdate(e) {
+                    try {
+                        const response = await axios({
+                            method: "put",
+                            url: `${this.base_url}/profile`,
+                            data: this.user,
+                            headers: {
+                                "Authorization": `Bearer ${this.token}`
+                            }
+                        });
+
+                        this.editModal.hide();
+                        
+                        Swal.fire({
+                            title: "Success!",
+                            text: "Profile updated successfully",
+                            icon: "success"
+                        });
+                    } catch (error) {
+                        console.error('Error updating profile:', error);
+                        
+                        Swal.fire({
+                            title: "Error!",
+                            text: "Failed to update profile",
+                            icon: "error"
+                        });
+                    }
+                }
+            }
+        }).mount("#app");
+    </script>
+</body>
+</html>
